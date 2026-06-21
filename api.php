@@ -3,7 +3,6 @@ require 'config.php';
 
 header('Content-Type: application/json');
 
-// Se não estiver logado, retorna JSON em vez de redirect (evita piscar)
 if (!isLoggedIn()) {
     echo json_encode(['expired' => true]);
     exit;
@@ -11,43 +10,40 @@ if (!isLoggedIn()) {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-// ── Heartbeat (usuário online) ─────────────────────────────────────────────
+try {
+
+// ── Ping ──────────────────────────────────────────────────────────────────
 if ($action === 'ping') {
     $ip = userIp();
     db()->prepare("REPLACE INTO users_online (ip, username) VALUES (?, ?)")
          ->execute([$ip, $_SESSION['username']]);
-    // limpa inativos (> 10 s) — sessão expira em 10s sem ping
     db()->exec("DELETE FROM users_online WHERE last_seen < DATE_SUB(NOW(), INTERVAL 10 SECOND)");
     $count = db()->query("SELECT COUNT(*) FROM users_online")->fetchColumn();
     echo json_encode(['online' => (int)$count]);
     exit;
 }
 
-// ── Buscar mensagens (polling) ─────────────────────────────────────────────
+// ── Get mensagens ─────────────────────────────────────────────────────────
 if ($action === 'get') {
     $since = (int)($_GET['since'] ?? 0);
-    $rows  = db()->prepare(
-        "SELECT id, username, ip, type, content, created_at
-         FROM messages WHERE id > ? ORDER BY id ASC LIMIT 50"
-    );
-    $rows->execute([$since]);
-    echo json_encode($rows->fetchAll());
+    $st = db()->prepare("SELECT id, username, ip, type, content, created_at FROM messages WHERE id > ? ORDER BY id ASC LIMIT 50");
+    $st->execute([$since]);
+    echo json_encode($st->fetchAll());
     exit;
 }
 
-// ── Enviar mensagem de texto ───────────────────────────────────────────────
+// ── Enviar texto ──────────────────────────────────────────────────────────
 if ($action === 'send') {
     $text = trim($_POST['text'] ?? '');
     if ($text === '') { echo json_encode(['ok' => false]); exit; }
     $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $ip   = userIp();
     db()->prepare("INSERT INTO messages (username, ip, type, content) VALUES (?, ?, 'text', ?)")
-         ->execute([$_SESSION['username'], $ip, $text]);
-    echo json_encode(['ok' => true, 'id' => db()->lastInsertId()]);
+         ->execute([$_SESSION['username'], userIp(), $text]);
+    echo json_encode(['ok' => true, 'id' => (int)db()->lastInsertId()]);
     exit;
 }
 
-// ── Upload de mídia ────────────────────────────────────────────────────────
+// ── Upload ────────────────────────────────────────────────────────────────
 if ($action === 'upload') {
     $file = $_FILES['file'] ?? null;
     if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
@@ -58,18 +54,11 @@ if ($action === 'upload') {
     }
 
     $mime = mime_content_type($file['tmp_name']);
-    if (str_starts_with($mime, 'image/')) {
-        $type   = 'image';
-        $subdir = 'images/';
-    } elseif (str_starts_with($mime, 'video/')) {
-        $type   = 'video';
-        $subdir = 'videos/';
-    } elseif (str_starts_with($mime, 'audio/')) {
-        $type   = 'audio';
-        $subdir = 'audio/';
-    } else {
-        echo json_encode(['ok' => false, 'error' => 'Tipo não permitido']); exit;
-    }
+    // compatível PHP 7 — sem str_starts_with
+    if (strpos($mime, 'image/') === 0)      { $type = 'image'; $subdir = 'images/'; }
+    elseif (strpos($mime, 'video/') === 0)  { $type = 'video'; $subdir = 'videos/'; }
+    elseif (strpos($mime, 'audio/') === 0)  { $type = 'audio'; $subdir = 'audio/';  }
+    else { echo json_encode(['ok' => false, 'error' => 'Tipo não permitido']); exit; }
 
     $ext      = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'bin';
     $filename = uniqid('', true) . '.' . $ext;
@@ -80,12 +69,14 @@ if ($action === 'upload') {
     }
 
     $url = UPLOAD_URL . $subdir . $filename;
-    $ip  = userIp();
     db()->prepare("INSERT INTO messages (username, ip, type, content) VALUES (?, ?, ?, ?)")
-         ->execute([$_SESSION['username'], $ip, $type, $url]);
-
+         ->execute([$_SESSION['username'], userIp(), $type, $url]);
     echo json_encode(['ok' => true, 'url' => $url, 'type' => $type]);
     exit;
 }
 
 echo json_encode(['ok' => false, 'error' => 'Ação inválida']);
+
+} catch (Exception $e) {
+    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+}

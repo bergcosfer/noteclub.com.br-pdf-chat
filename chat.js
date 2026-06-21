@@ -119,15 +119,15 @@ let pingFails = 0;
 async function ping() {
   try {
     const r = await fetch('api.php?action=ping');
-    if (!r.ok) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; return; }
+    if (!r.ok) { pingFails++; if (pingFails >= 3) window.location = 'index.php'; return; }
     const text = await r.text();
-    if (!text.trim().startsWith('{')) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; return; }
+    if (!text.trim().startsWith('{')) { pingFails++; if (pingFails >= 3) window.location = 'index.php'; return; }
     pingFails = 0;
     const d = JSON.parse(text);
-    if (d.expired) { window.location = 'login.php'; return; }
+    if (d.expired) { window.location = 'index.php'; return; }
     $online.textContent = d.online === 1 ? '🟡 Só você' :
                           d.online >= 2  ? '🟢 2 online' : '⚫ offline';
-  } catch(e) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; }
+  } catch(e) { pingFails++; if (pingFails >= 3) window.location = 'index.php'; }
 }
 
 function startTimers() {
