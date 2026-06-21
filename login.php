@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['username']      = htmlspecialchars($nome, ENT_QUOTES);
         $_SESSION['authenticated'] = true;
         $_SESSION['ip']            = userIp();
-        // registra/atualiza usuário online
-        $ip = userIp();
-        db()->prepare("REPLACE INTO users_online (ip, username) VALUES (?, ?)")
-             ->execute([$ip, $_SESSION['username']]);
+        try {
+            db()->prepare("REPLACE INTO users_online (ip, username) VALUES (?, ?)")
+                 ->execute([userIp(), $_SESSION['username']]);
+        } catch (Exception $e) { /* ignora erro de banco no login */ }
         header('Location: chat.php');
         exit;
     }
