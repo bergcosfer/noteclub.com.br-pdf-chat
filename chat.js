@@ -328,3 +328,5 @@ document.addEventListener('touchstart', () => { lastActivity = Date.now(); }, { 
 // ── Init ──────────────────────────────────────────────────────────────────
 buildEmojiPicker();
 startTimers();
+// iOS: rola para o fim quando o teclado abre/fecha
+window.addEventListener('resize', () => setTimeout(scrollBottom, 100));
