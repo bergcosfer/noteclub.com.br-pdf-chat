@@ -1,11 +1,9 @@
 <?php
 require 'config.php';
 
-// Se chegou ao login.php manualmente (GET), destrói sessão ativa
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isLoggedIn()) {
-    db()->prepare("DELETE FROM users_online WHERE ip = ?")->execute([userIp()]);
-    session_destroy();
-    session_start();
+// GET: força novo login limpando a sessão
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    unset($_SESSION['username'], $_SESSION['authenticated'], $_SESSION['ip']);
 }
 
 if (isLoggedIn()) {

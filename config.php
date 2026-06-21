@@ -11,7 +11,7 @@ define('MAX_FILE_MB', 50);
 define('UPLOAD_DIR', __DIR__ . '/uploads/');
 define('UPLOAD_URL', 'uploads/');
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 function db(): PDO {
     static $pdo;
