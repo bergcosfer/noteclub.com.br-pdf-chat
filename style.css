@@ -1,0 +1,186 @@
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+/* ===== Login ===== */
+.login-body {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+}
+.login-box {
+  background: #fff; border-radius: 16px; padding: 2rem 1.8rem;
+  width: 100%; max-width: 360px; text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.login-box h1 { font-size: 1.6rem; margin-bottom: 1.2rem; color: #1a1a2e; }
+.login-box input {
+  display: block; width: 100%; padding: .75rem 1rem; margin-bottom: .8rem;
+  border: 1.5px solid #ddd; border-radius: 10px; font-size: 1rem;
+  outline: none; transition: border .2s;
+}
+.login-box input:focus { border-color: #0f3460; }
+.login-box button {
+  width: 100%; padding: .8rem; background: #0f3460; color: #fff;
+  border: none; border-radius: 10px; font-size: 1rem; cursor: pointer;
+  transition: background .2s;
+}
+.login-box button:hover { background: #16213e; }
+.error { color: #e53e3e; margin-bottom: .8rem; font-size: .9rem; }
+
+/* ===== Chat Layout ===== */
+body {
+  display: flex; flex-direction: column; height: 100vh;
+  background: #0a0a1a; color: #f0f0f0;
+  overflow: hidden;
+}
+
+#chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem 1rem; background: #0f3460;
+  font-weight: 600; font-size: 1rem;
+  position: sticky; top: 0; z-index: 10;
+}
+#online-status { font-size: .8rem; opacity: .85; }
+.btn-logout {
+  color: #fff; text-decoration: none; font-size: .8rem;
+  background: rgba(255,255,255,.15); padding: .3rem .7rem; border-radius: 8px;
+}
+
+/* ===== Messages ===== */
+#messages {
+  flex: 1; overflow-y: auto; padding: .8rem;
+  display: flex; flex-direction: column; gap: .5rem;
+  scroll-behavior: smooth;
+}
+.msg-bubble {
+  max-width: 78%; padding: .55rem .85rem; border-radius: 18px;
+  word-break: break-word; font-size: .95rem; line-height: 1.4;
+  position: relative;
+}
+.msg-mine {
+  align-self: flex-end;
+  background: #0f3460; color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg-other {
+  align-self: flex-start;
+  background: #1e1e3a; color: #f0f0f0;
+  border-bottom-left-radius: 4px;
+}
+.msg-name {
+  font-size: .72rem; font-weight: 700; opacity: .75;
+  margin-bottom: .2rem; display: block;
+}
+.msg-time {
+  font-size: .68rem; opacity: .55; margin-top: .25rem;
+  display: block; text-align: right;
+}
+.msg-bubble img {
+  max-width: 100%; border-radius: 10px; display: block;
+  cursor: pointer; margin-top: .3rem;
+}
+.msg-bubble video, .msg-bubble audio {
+  max-width: 100%; border-radius: 10px; display: block; margin-top: .3rem;
+}
+
+/* ===== Emoji Picker ===== */
+#emoji-picker-container {
+  background: #1e1e3a; border-top: 1px solid #333;
+  padding: .5rem; max-height: 180px; overflow-y: auto;
+}
+#emoji-grid {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+#emoji-grid span {
+  font-size: 1.4rem; cursor: pointer; padding: 2px;
+  border-radius: 6px; transition: background .15s;
+}
+#emoji-grid span:hover { background: rgba(255,255,255,.1); }
+
+/* ===== Footer ===== */
+#chat-footer {
+  background: #0d0d1f; border-top: 1px solid #222;
+  padding: .4rem .5rem;
+}
+#toolbar {
+  display: flex; gap: .4rem; margin-bottom: .4rem;
+}
+#toolbar button {
+  background: #1e1e3a; border: none; border-radius: 10px;
+  font-size: 1.2rem; padding: .4rem .6rem; cursor: pointer;
+  transition: background .2s; flex: 1;
+}
+#toolbar button:hover { background: #2a2a50; }
+#toolbar button.active { background: #0f3460; }
+
+#input-row {
+  display: flex; gap: .4rem; align-items: flex-end;
+}
+#msg-input {
+  flex: 1; background: #1e1e3a; border: 1px solid #333;
+  border-radius: 12px; padding: .6rem .9rem; color: #f0f0f0;
+  font-size: .95rem; resize: none; outline: none;
+  max-height: 100px; overflow-y: auto; line-height: 1.4;
+}
+#btn-send {
+  background: #0f3460; border: none; border-radius: 12px;
+  color: #fff; font-size: 1.2rem; padding: .6rem .9rem;
+  cursor: pointer; transition: background .2s;
+}
+#btn-send:hover { background: #16213e; }
+
+/* ===== Recording indicator ===== */
+#rec-indicator {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .4rem .8rem; background: #1e1e3a;
+  border-radius: 20px; margin-bottom: .4rem;
+  font-size: .85rem;
+}
+#rec-indicator .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #e53e3e; animation: blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ===== Camera Modal ===== */
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.modal-inner {
+  background: #0d0d1f; border-radius: 16px; overflow: hidden;
+  width: 100%; max-width: 500px;
+}
+#camera-preview {
+  width: 100%; max-height: 65vh; object-fit: cover; display: block;
+}
+.modal-controls {
+  display: flex; gap: .5rem; padding: .7rem;
+  justify-content: center; flex-wrap: wrap;
+}
+.modal-controls button {
+  background: #1e1e3a; border: none; border-radius: 10px;
+  color: #fff; padding: .6rem 1rem; font-size: .9rem; cursor: pointer;
+}
+.modal-controls button:hover { background: #0f3460; }
+.modal-controls button:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ===== Utilities ===== */
+.hidden { display: none !important; }
+
+/* ===== Scrollbar ===== */
+#messages::-webkit-scrollbar { width: 4px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+/* ===== Tablet/Desktop ===== */
+@media (min-width: 600px) {
+  #chat-header { padding: .8rem 1.5rem; font-size: 1.1rem; }
+  .msg-bubble   { max-width: 60%; }
+  #messages     { padding: 1rem 2rem; }
+}
+@media (min-width: 900px) {
+  body { max-width: 720px; margin: 0 auto; border-left: 1px solid #222; border-right: 1px solid #222; }
+}

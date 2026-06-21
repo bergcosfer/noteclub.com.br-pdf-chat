@@ -1,0 +1,6 @@
+# Bloqueia execução de qualquer script PHP nesta pasta
+<FilesMatch "\.(php|phtml|php3|php4|php5|phps|phar)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+Options -Indexes
