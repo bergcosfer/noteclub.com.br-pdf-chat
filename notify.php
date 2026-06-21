@@ -2,10 +2,10 @@
 // notify.php — roda via cron job, envia email se houver mensagem nova
 // Cron sugerido: */1 * * * * (a cada 1 minuto)
 
-require __DIR__ . '/config.php';
+require dirname(__FILE__) . '/config.php';
 
-define('NOTIFY_EMAIL', 'SEU_EMAIL_AQUI');   // ← troque pelo seu email
-define('LAST_ID_FILE', __DIR__ . '/last_notified_id.txt');
+define('NOTIFY_EMAIL', 'SEU_EMAIL_AQUI');
+define('LAST_ID_FILE', dirname(__FILE__) . '/last_notified_id.txt');
 
 $lastId = (int)(file_exists(LAST_ID_FILE) ? file_get_contents(LAST_ID_FILE) : 0);
 
