@@ -15,7 +15,7 @@ let activityTimer = null;
 
 const PING_INTERVAL     = 8000;
 const POLL_INTERVAL     = 2000;
-const INACTIVITY_LIMIT  = 10000; // 10s sem mensagem nova → deslogar
+const INACTIVITY_LIMIT  = 60000; // 60s sem mensagem nova → deslogar
 
 // ── Elementos ─────────────────────────────────────────────────────────────
 const $msgs      = document.getElementById('messages');
@@ -316,12 +316,14 @@ $btnRecE.addEventListener('click', stopCamRec);
 
 // Fechar emoji ao clicar fora
 document.addEventListener('click', e => {
+  lastActivity = Date.now(); // qualquer clique/toque reseta inatividade
   if (emojiOpen && !$emojiBox.contains(e.target) && e.target !== $btnEmoji) {
     emojiOpen = false;
     $emojiBox.classList.add('hidden');
     $btnEmoji.classList.remove('active');
   }
 });
+document.addEventListener('touchstart', () => { lastActivity = Date.now(); }, { passive: true });
 
 // ── Init ──────────────────────────────────────────────────────────────────
 buildEmojiPicker();
