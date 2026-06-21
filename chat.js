@@ -286,7 +286,7 @@ $send.addEventListener('click', sendText);
 $input.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); }
 });
-$input.addEventListener('input', autoResize);
+$input.addEventListener('input', () => { autoResize(); lastActivity = Date.now(); });
 
 $btnEmoji.addEventListener('click', () => {
   emojiOpen = !emojiOpen;
