@@ -10,9 +10,12 @@ let camStream     = null;
 let camRecorder   = null;
 let camChunks     = [];
 let emojiOpen     = false;
+let lastActivity  = Date.now(); // última vez que houve mensagem nova
+let activityTimer = null;
 
-const PING_INTERVAL = 8000;   // ms — mantém sessão viva
-const POLL_INTERVAL = 2000;   // ms — busca novas mensagens
+const PING_INTERVAL     = 8000;
+const POLL_INTERVAL     = 2000;
+const INACTIVITY_LIMIT  = 10000; // 10s sem mensagem nova → deslogar
 
 // ── Elementos ─────────────────────────────────────────────────────────────
 const $msgs      = document.getElementById('messages');
@@ -103,13 +106,14 @@ function scrollBottom() {
 async function poll() {
   try {
     const r = await fetch(`api.php?action=get&since=${lastId}`);
-    if (!r.ok) return; // ignora erros HTTP silenciosamente
+    if (!r.ok) return;
     const text = await r.text();
-    if (!text.trim().startsWith('[')) return; // não é JSON válido, ignora
+    if (!text.trim().startsWith('[')) return;
     const msgs = JSON.parse(text);
     if (msgs.length) {
       msgs.forEach(m => { renderBubble(m); lastId = m.id; });
       scrollBottom();
+      lastActivity = Date.now(); // resetar timer ao receber mensagem
     }
   } catch(e) { /* silencioso */ }
 }
@@ -133,8 +137,17 @@ async function ping() {
 function startTimers() {
   ping();
   poll();
-  pingTimer = setInterval(ping, PING_INTERVAL);
-  pollTimer = setInterval(poll, POLL_INTERVAL);
+  pingTimer     = setInterval(ping, PING_INTERVAL);
+  pollTimer     = setInterval(poll, POLL_INTERVAL);
+  // verifica inatividade a cada segundo
+  activityTimer = setInterval(() => {
+    if (Date.now() - lastActivity > INACTIVITY_LIMIT) {
+      clearInterval(pingTimer);
+      clearInterval(pollTimer);
+      clearInterval(activityTimer);
+      fetch('logout.php').finally(() => { window.location = 'index.php'; });
+    }
+  }, 1000);
 }
 
 // ── Enviar texto ──────────────────────────────────────────────────────────
@@ -143,6 +156,7 @@ async function sendText() {
   if (!text) return;
   $input.value = '';
   autoResize();
+  lastActivity = Date.now(); // resetar timer ao enviar
   try {
     const fd = new FormData();
     fd.append('action', 'send');
@@ -154,6 +168,7 @@ async function sendText() {
 
 // ── Upload genérico ───────────────────────────────────────────────────────
 async function uploadFile(file) {
+  lastActivity = Date.now();
   const fd = new FormData();
   fd.append('action', 'upload');
   fd.append('file', file);
