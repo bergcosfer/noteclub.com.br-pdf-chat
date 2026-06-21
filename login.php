@@ -1,6 +1,13 @@
 <?php
 require 'config.php';
 
+// Se chegou ao login.php manualmente (GET), destrói sessão ativa
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isLoggedIn()) {
+    db()->prepare("DELETE FROM users_online WHERE ip = ?")->execute([userIp()]);
+    session_destroy();
+    session_start();
+}
+
 if (isLoggedIn()) {
     header('Location: chat.php');
     exit;

@@ -1,8 +1,14 @@
 <?php
 require 'config.php';
-requireLogin();
 
 header('Content-Type: application/json');
+
+// Se não estiver logado, retorna JSON em vez de redirect (evita piscar)
+if (!isLoggedIn()) {
+    echo json_encode(['expired' => true]);
+    exit;
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // ── Heartbeat (usuário online) ─────────────────────────────────────────────

@@ -103,7 +103,10 @@ function scrollBottom() {
 async function poll() {
   try {
     const r = await fetch(`api.php?action=get&since=${lastId}`);
-    const msgs = await r.json();
+    if (!r.ok) return; // ignora erros HTTP silenciosamente
+    const text = await r.text();
+    if (!text.trim().startsWith('[')) return; // não é JSON válido, ignora
+    const msgs = JSON.parse(text);
     if (msgs.length) {
       msgs.forEach(m => { renderBubble(m); lastId = m.id; });
       scrollBottom();
@@ -112,13 +115,19 @@ async function poll() {
 }
 
 // ── Ping (mantém sessão + conta online) ───────────────────────────────────
+let pingFails = 0;
 async function ping() {
   try {
     const r = await fetch('api.php?action=ping');
-    const d = await r.json();
+    if (!r.ok) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; return; }
+    const text = await r.text();
+    if (!text.trim().startsWith('{')) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; return; }
+    pingFails = 0;
+    const d = JSON.parse(text);
+    if (d.expired) { window.location = 'login.php'; return; }
     $online.textContent = d.online === 1 ? '🟡 Só você' :
                           d.online >= 2  ? '🟢 2 online' : '⚫ offline';
-  } catch(e) { /* sessão expirou → redireciona */ window.location = 'login.php'; }
+  } catch(e) { pingFails++; if (pingFails >= 3) window.location = 'login.php'; }
 }
 
 function startTimers() {
