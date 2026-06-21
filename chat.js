@@ -59,7 +59,54 @@ function buildEmojiPicker() {
   });
 }
 
-// ── Formatar data ─────────────────────────────────────────────────────────
+// ── Notificação ───────────────────────────────────────────────────────────
+let notifEnabled = false;
+const notifSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAA' +
+  'ACAAEAQB8AAEAfAAABAAgAZGF0YU' + 'A'.repeat(40) + '==');
+
+// Som sintético via Web Audio API (não depende de arquivo externo)
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.25);
+  } catch(e) {}
+}
+
+let unread = 0;
+const originalTitle = document.title;
+
+function notifyNewMessage() {
+  // só notifica se a aba não estiver em foco
+  if (!document.hidden) return;
+  playBeep();
+  unread++;
+  document.title = `(${unread}) ${originalTitle}`;
+}
+
+// limpa badge quando volta para a aba
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { unread = 0; document.title = originalTitle; }
+});
+
+// Pede permissão de notificação do sistema na primeira interação
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  notifEnabled = true;
+}
+
+function sendSystemNotif(username, text) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  new Notification(`💬 ${username}`, { body: text, icon: '' });
+}
 function fmtTime(ts) {
   const d = new Date(ts.replace(' ', 'T'));
   return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -111,9 +158,17 @@ async function poll() {
     if (!text.trim().startsWith('[')) return;
     const msgs = JSON.parse(text);
     if (msgs.length) {
-      msgs.forEach(m => { renderBubble(m); lastId = m.id; });
+      msgs.forEach(m => {
+        renderBubble(m);
+        lastId = m.id;
+        // notifica apenas mensagens do outro usuário
+        if (m.username !== CURRENT_USER) {
+          notifyNewMessage();
+          sendSystemNotif(m.username, m.type === 'text' ? m.content : `[${m.type}]`);
+        }
+      });
       scrollBottom();
-      lastActivity = Date.now(); // resetar timer ao receber mensagem
+      lastActivity = Date.now();
     }
   } catch(e) { /* silencioso */ }
 }
@@ -330,3 +385,6 @@ buildEmojiPicker();
 startTimers();
 // iOS: rola para o fim quando o teclado abre/fecha
 window.addEventListener('resize', () => setTimeout(scrollBottom, 100));
+// pede permissão de notificação na primeira interação
+document.addEventListener('click', requestNotifPermission, { once: true });
+document.addEventListener('touchstart', requestNotifPermission, { once: true, passive: true });
